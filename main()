@@ -1,0 +1,346 @@
+#include <iostream>
+#include <cstdlib>
+#include <ctime>
+#include <windows.h>
+#include <cstring>
+#include "red_polje.h"
+//#include "red_pokazivac.h"
+using namespace std;
+
+int bpacijenti = 0;
+char imena[][20] = {"Ivan", "Josip", "Marko", "Tomislav", "Matej", "Ivana", "Josipa", "Matea", "Marija", "Ana"};
+char prezimena[][20] = {"Horvat", "Kovacevic", "Babic", "Martinovic", "Perkovic", "Grgic", "Majic", "Peric"};
+char p_pacijent[][30] = {"Hitan slucaj", "Invalid", "Trudnica", "Djeca", "Ostali pacijenti"};
+char v_usluga[][30] = {"Pregled", "Previjanje", "Recepti", "Uputnice"};
+char v_ordinacija[][30] = {"Obiteljska medicina", "Oftalmologija", "Dermatovenerologija", "Ginekologija", "Urologija"};
+
+void ispis_p(pacijent x)
+{
+    cout << "Ime i prezime: " << x.ime << " " << x.prezime << endl;
+    cout << "Datum rodjenja: " << x.dan << "." << x.mjesec << "." << x.godina << endl;
+    cout << "Spol: " << x.spol << endl;
+    cout << "Prioritet: " << x.p_pacijent << endl;
+    cout << "Usluga: " << x.v_usluga << endl;
+    cout << "Vrsta ordinacije: " << x.v_ordinacija << endl;
+    cout << endl << endl;
+
+}
+
+void ispis_s(Queue *Q)
+{
+    Queue *temp = new Queue;
+    InitQ(temp);
+    while(!IsEmptyQ(Q))
+    {
+        EnQueueQ(FrontQ(Q), temp);
+        cout << "==========" << endl;
+        ispis_p(FrontQ(Q));
+        cout << endl << endl;
+        DeQueueQ(Q);
+    }
+
+    while(!IsEmptyQ(temp))
+    {
+        EnQueueQ(FrontQ(temp), Q);
+        DeQueueQ(temp);
+    }
+    cout << endl << endl;
+}
+
+void zad1(Queue *Q)
+{
+    int N;
+    cout << "Koliko petorki zelite kreirati? ";
+    cin >> N;
+
+    pacijent novi;
+
+    for(int i=0;i<N;i++)
+    {
+        do
+        {
+            novi.ai = 50 + rand() % 301;
+            novi.bi = 50 + rand() % 301;
+            int c = rand() % 5;
+            novi.ci = c;
+            strcpy(novi.p_pacijent, p_pacijent[c]);
+            int d = rand() % 4;
+            novi.di = d;
+            strcpy(novi.v_usluga, v_usluga[d]);
+            int e = rand() % 5;
+            novi.ei = e;
+            strcpy(novi.v_ordinacija, v_ordinacija[e]);
+        }while(novi.p_pacijent == "Hitan slucaj" && (novi.v_usluga == "Recepti" || novi.v_usluga == "Uputnice")
+               || novi.p_pacijent == "Trudnica" && novi.v_ordinacija == "Urologija"
+               || novi.p_pacijent == "Djeca" && novi.v_ordinacija == "Ginekologija");
+        EnQueueQ(novi, Q);
+    }
+}
+
+
+void zad2(Queue *tempQ, Queue *Q)
+{
+    while(!IsEmptyQ(tempQ))
+    {
+        pacijent novi = FrontQ(tempQ);
+
+        for(int i=0;i<3;i++)
+        {
+            int a = rand() % 10;
+            strcpy(novi.ime, imena[a]);
+
+            int b = rand() % 8;
+            strcpy(novi.prezime, prezimena[b]);
+
+            novi.dan = rand() % 31+1;
+            novi.mjesec = rand() % 12+1;
+            if(novi.ci==4)
+                novi.godina = 2013 - rand() % 6;
+            else
+            {
+                if(novi.ci==3)
+                    novi.godina = 1973 + rand() % 20;
+                else
+                    novi.godina = 1940 + rand() % 73;
+            }
+
+            if(strcmp(novi.ime, imena[0])==0 || strcmp(novi.ime, imena[1])==0 || strcmp(novi.ime, imena[2])==0 || strcmp(novi.ime, imena[3])==0 || strcmp(novi.ime, imena[4])==0)
+                novi.spol = 'm';
+            else
+                novi.spol = 'z';
+
+            bpacijenti++;
+            EnQueueQ(novi, Q);
+        }
+
+        DeQueueQ(tempQ);
+    }
+
+    Queue *prioritetno = new Queue;
+    Queue *slijedno = new Queue;
+    InitQ(prioritetno);
+    InitQ(slijedno);
+
+    for(int i=0; i<5; i++)
+    {
+        while(!IsEmptyQ(Q))
+        {
+            if(FrontQ(Q).ci == i)
+            {
+                EnQueueQ(FrontQ(Q), prioritetno);
+                DeQueueQ(Q);
+            }
+            else
+            {
+                EnQueueQ(FrontQ(Q), slijedno);
+                DeQueueQ(Q);
+            }
+        }
+
+        while(!IsEmptyQ(slijedno))
+        {
+            EnQueueQ(FrontQ(slijedno), Q);
+            DeQueueQ(slijedno);
+        }
+
+        }
+
+        while(!IsEmptyQ(prioritetno))
+        {
+            EnQueueQ(FrontQ(prioritetno), Q);
+            DeQueueQ(prioritetno);
+        }
+
+        delete slijedno;
+        delete prioritetno;
+
+        ispis_s(Q);
+
+        pacijent temp2;
+        cout << "Pacijentice starije od 25 godina koje cekaju na pregled kod oftalmologa:" << endl;
+        cout << "========================================================================" << endl;
+        for(int i=0;i<bpacijenti;i++)
+        {
+            temp2 = FrontQ(Q);
+            if(temp2.godina < 1988 && strcmp(temp2.v_ordinacija, v_ordinacija[1]) == 0 && temp2.spol == 'z')
+                ispis_p(temp2);
+
+            EnQueueQ(temp2, Q);
+            DeQueueQ(Q);
+        }
+}
+
+void zad3(Queue *Q)
+{
+    if(IsEmptyQ(Q))
+        return;
+
+  pacijent temp3 = FrontQ(Q);
+  DeQueueQ(Q);
+  zad3(Q);
+  if(strcmp(temp3.p_pacijent, p_pacijent[1]) == 0 && temp3.godina < 1963 && strcmp(temp3.v_ordinacija, v_ordinacija[0]) == 0 && strcmp(temp3.v_usluga, v_usluga[1]) == 0)
+  {
+          ispis_p(temp3);
+          bpacijenti--;
+          return;
+  }
+  EnQueueQ(temp3, Q);
+}
+void obrnuto(Queue *Q)
+{
+    if(IsEmptyQ(Q))
+        return;
+
+    pacijent temp3 = FrontQ(Q);
+    DeQueueQ(Q);
+    obrnuto(Q);
+    EnQueueQ(temp3, Q);
+}
+
+void uputnica_recept(Queue *Q, Queue *brzi_red)
+{
+    if(IsEmptyQ(Q))
+        return;
+
+    pacijent temp = FrontQ(Q);
+    DeQueueQ(Q);
+    uputnica_recept(Q, brzi_red);
+
+    if(temp.di ==3 || temp.di == 4)
+    {
+        EnQueueQ(temp, brzi_red);
+        bpacijenti--;
+    }
+    else
+        EnQueueQ(temp, Q);
+
+}
+
+void zad4(Queue *Q)
+{
+    cout << "U cekaonici:" << endl;
+    ispis_s(Q);
+    cout << endl << endl;
+
+    Queue *brzi_red = new Queue;
+    InitQ(brzi_red);
+
+    system("CLS");
+    cout << "Pacijenti koji trebaju recept ili uputnicu prelaze iz glavnog u brzi red." << endl << endl;
+    uputnica_recept(Q, brzi_red);
+
+    cout << "***************" << endl << "30% zadnjih iz gavnog prelazi u brzi red." << endl;
+    int postotak = bpacijenti * 0.3;
+    cout << "Trenutno pacijenata u glavnom redu: " << bpacijenti << endl;
+    cout << "Trenutno pacijenata u brzom redu (30%) : " << postotak << endl << "***************" << endl << endl;
+    for(int i=5;i>=0;i--)
+    {
+        cout << i << "\r";
+        Sleep(1000);
+    }
+    cout << endl << endl;
+
+    for(int i=0;i<postotak;i++)
+    {
+        EnQueueQ(FrontQ(Q), brzi_red);
+        DeQueueQ(Q);
+        bpacijenti--;
+    }
+
+    cout << "Brzi red: " << endl;
+    //==============================================
+    Queue *slijedni = new Queue;
+    InitQ(slijedni);
+    Queue *prioritetni = new Queue;
+    InitQ(prioritetni);
+
+    for(int i=0; i<5; i++)
+    {
+        while (!IsEmptyQ(brzi_red))
+        {
+            if(FrontQ(brzi_red).ci == i)
+            {
+                EnQueueQ(FrontQ(brzi_red), prioritetni);
+                DeQueueQ(brzi_red);
+            }
+            else
+            {
+                EnQueueQ(FrontQ(brzi_red), slijedni);
+                DeQueueQ(brzi_red);
+            }
+        }
+
+        while (!IsEmptyQ(slijedni))
+        {
+            EnQueueQ(FrontQ(slijedni), brzi_red);
+            DeQueueQ(slijedni);
+        }
+
+    }
+
+    while (!IsEmptyQ(prioritetni))
+    {
+        EnQueueQ(FrontQ(prioritetni), brzi_red);
+        DeQueueQ(prioritetni);
+    }
+
+    delete slijedni;
+    delete prioritetni;
+
+    //==============================================
+    ispis_s(brzi_red);
+
+    cout << "Glavni red nakon prebacivanja: " << endl;
+    obrnuto(Q);
+    ispis_s(Q);
+
+    delete brzi_red;
+}
+
+
+int main()
+{
+    srand(time(0));
+    rand();
+    Queue *Q = new Queue;
+    Queue *tempQ = new Queue;
+    InitQ(Q);
+    InitQ(tempQ);
+    int izbor;
+    do
+    {
+        cout << "=======================================" << endl;
+        cout << "1.Generiranje niza od N petorki" << endl;
+        cout << "2.Upis pacjenata u red" << endl;
+        cout << "3.Izbacivanje pojedinih pacijenata" << endl;
+        cout << "4.Simuliranje reda brzih usluga" << endl;
+        cout << "0.Izlaz iz programa" << endl;
+        cout << "=======================================" << endl;
+        cout << "Vas izbor? ";
+        cin >> izbor;
+        cout << endl;
+
+        switch(izbor)
+        {
+        case 1:
+            zad1(tempQ);
+            cout << endl << endl;
+            break;
+        case 2:
+            zad2(tempQ, Q);
+            cout << endl << endl;
+            break;
+        case 3:
+            zad3(Q);
+            obrnuto(Q);
+            cout << endl << endl;
+            break;
+        case 4:
+            zad4(Q);
+            break;
+        }
+
+    }while(izbor !=0);
+
+    return 0;
+}
